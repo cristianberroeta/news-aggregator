@@ -250,8 +250,8 @@ APP.Main = (function() {
   }
 
   /**
-   * Does this really add anything? Can we do this kind
-   * of work in a cheaper way?
+   * Apparently this function has a bug. When scrolling about 100 elements down,
+   * the colors become all orange, without gradient
    */
   function colorizeAndScaleStories() {
 
