@@ -61,32 +61,33 @@ APP.Main = (function() {
    * that should really be handled more delicately, and
    * probably in a requestAnimationFrame callback.
    */
+  var elementsToEdit;
   function onStoryData (key, details) {
 
-    // This seems odd. Surely we could just select the story
-    // directly rather than looping through all of them.
-    var storyElements = document.querySelectorAll('.story');
+    var story = document.querySelector('#s-' + key);
 
-    for (var i = 0; i < storyElements.length; i++) {
+    if (typeof story !== 'undefined') {
+      details.time *= 1000;
+      var html = storyTemplate(details);
+      story.innerHTML = html;
+      story.addEventListener('click', onStoryClick.bind(this, details));
+      story.classList.add('clickable');
 
-      if (storyElements[i].getAttribute('id') === 's-' + key) {
-
-        details.time *= 1000;
-        var story = storyElements[i];
-        var html = storyTemplate(details);
-        story.innerHTML = html;
-        story.addEventListener('click', onStoryClick.bind(this, details));
-        story.classList.add('clickable');
-
-        // Tick down. When zero we can batch in the next load.
-        storyLoadCount--;
-
-      }
+      // Tick down. When zero we can batch in the next load.
+      storyLoadCount--;
     }
 
     // Colorize on complete.
-    if (storyLoadCount === 0)
+    if (count == storyLoadCount + 1) {
+      var main = $('main');
+      var mainHeight = main.offsetHeight;
+      var elementsHeight = story.offsetHeight;
+      elementsToEdit = Math.ceil(mainHeight / elementsHeight);
+    }
+
+    if ((count - storyLoadCount - 1 < elementsToEdit)) {
       colorizeAndScaleStories();
+    }
   }
 
   function onStoryClick(details) {
@@ -258,27 +259,36 @@ APP.Main = (function() {
 
     // It does seem awfully broad to change all the
     // colors every time!
-    for (var s = 0; s < storyElements.length; s++) {
+
+    var main = $('main');
+    var mainHeight = main.offsetHeight;
+    var headerHeight = $('.header').offsetHeight;
+    var pixelsScrolled = Math.max(0, main.scrollTop - 70);
+    var elementsHeight = storyElements[0].offsetHeight;
+    var elementsHeightPercentScrolled = (pixelsScrolled / elementsHeight) -
+      Math.floor(pixelsScrolled / elementsHeight);
+    var elementsScrolled = Math.floor(pixelsScrolled / elementsHeight);
+    var elementsToEdit = Math.ceil(mainHeight / elementsHeight);
+
+    for (var s = elementsScrolled; s < elementsScrolled + elementsToEdit; s++) {
+      var elementPositionOnScreen = s - elementsScrolled;
+      var elementTop = headerHeight + elementPositionOnScreen * elementsHeight -
+        elementsHeightPercentScrolled * elementsHeight;
 
       var story = storyElements[s];
       var score = story.querySelector('.story__score');
       var title = story.querySelector('.story__title');
 
       // Base the scale on the y position of the score.
-      var height = main.offsetHeight;
-      var mainPosition = main.getBoundingClientRect();
-      var scoreLocation = score.getBoundingClientRect().top -
-          document.body.getBoundingClientRect().top;
-      var scale = Math.min(1, 1 - (0.05 * ((scoreLocation - 170) / height)));
-      var opacity = Math.min(1, 1 - (0.5 * ((scoreLocation - 170) / height)));
+      var scale = Math.min(1, 1 - (0.05 * ((elementTop - 170) / mainHeight)));
+      var opacity = Math.min(1, 1 - (0.5 * ((elementTop - 170) / mainHeight)));
 
       score.style.width = (scale * 40) + 'px';
       score.style.height = (scale * 40) + 'px';
       score.style.lineHeight = (scale * 40) + 'px';
 
       // Now figure out how wide it is and use that to saturate it.
-      scoreLocation = score.getBoundingClientRect();
-      var saturation = (100 * ((scoreLocation.width - 38) / 2));
+      var saturation = (100 * (((scale * 40) - 38) / 2));
 
       score.style.backgroundColor = 'hsl(42, ' + saturation + '%, 50%)';
       title.style.opacity = opacity;
@@ -295,12 +305,14 @@ APP.Main = (function() {
 
   });
 
-  main.addEventListener('scroll', function() {
-
+  function animateScroll() {
     var header = $('header');
     var headerTitles = header.querySelector('.header__title-wrapper');
     var scrollTopCapped = Math.min(70, main.scrollTop);
     var scaleString = 'scale(' + (1 - (scrollTopCapped / 300)) + ')';
+    var mainScrollTop = main.scrollTop;
+    var loadThreshold = (main.scrollHeight - main.offsetHeight -
+        LAZY_LOAD_THRESHOLD);
 
     colorizeAndScaleStories();
 
@@ -309,17 +321,34 @@ APP.Main = (function() {
     headerTitles.style.transform = scaleString;
 
     // Add a shadow to the header.
-    if (main.scrollTop > 70)
+    if (mainScrollTop > 70)
       document.body.classList.add('raised');
     else
       document.body.classList.remove('raised');
 
     // Check if we need to load the next batch of stories.
-    var loadThreshold = (main.scrollHeight - main.offsetHeight -
-        LAZY_LOAD_THRESHOLD);
-    if (main.scrollTop > loadThreshold)
+    if (mainScrollTop > loadThreshold)
       loadStoryBatch();
-  });
+  }
+
+  // Based on https://gist.github.com/Warry/4254579. requestAnimationFrame
+  // Should be faster than scroll event (altough requestAnimationFrame runs
+  // always, so I'm not sure if its better overall):
+
+  var lastPosition = 0;
+
+  function scrollLoop(){
+      // Avoid calculations if not needed
+      if (lastPosition == $('main').scrollTop) {
+          requestAnimationFrame(scrollLoop);
+          return false;
+      } else {
+        lastPosition = $('main').scrollTop;
+        animateScroll();
+        requestAnimationFrame(scrollLoop);
+      }
+  }
+  scrollLoop();
 
   function loadStoryBatch() {
 
@@ -359,5 +388,6 @@ APP.Main = (function() {
     loadStoryBatch();
     main.classList.remove('loading');
   });
+
 
 })();
