@@ -271,27 +271,29 @@ APP.Main = (function() {
     var elementsToEdit = Math.ceil(mainHeight / elementsHeight);
 
     for (var s = elementsScrolled; s < elementsScrolled + elementsToEdit; s++) {
-      var elementPositionOnScreen = s - elementsScrolled;
-      var elementTop = headerHeight + elementPositionOnScreen * elementsHeight -
-        elementsHeightPercentScrolled * elementsHeight;
-
       var story = storyElements[s];
-      var score = story.querySelector('.story__score');
-      var title = story.querySelector('.story__title');
+      if (typeof story !== 'undefined') {
+        var elementPositionOnScreen = s - elementsScrolled;
+        var elementTop = headerHeight + elementPositionOnScreen * elementsHeight -
+          elementsHeightPercentScrolled * elementsHeight;
 
-      // Base the scale on the y position of the score.
-      var scale = Math.min(1, 1 - (0.05 * ((elementTop - 170) / mainHeight)));
-      var opacity = Math.min(1, 1 - (0.5 * ((elementTop - 170) / mainHeight)));
+        var score = story.querySelector('.story__score');
+        var title = story.querySelector('.story__title');
 
-      score.style.width = (scale * 40) + 'px';
-      score.style.height = (scale * 40) + 'px';
-      score.style.lineHeight = (scale * 40) + 'px';
+        // Base the scale on the y position of the score.
+        var scale = Math.min(1, 1 - (0.05 * ((elementTop - 170) / mainHeight)));
+        var opacity = Math.min(1, 1 - (0.5 * ((elementTop - 170) / mainHeight)));
 
-      // Now figure out how wide it is and use that to saturate it.
-      var saturation = (100 * (((scale * 40) - 38) / 2));
+        score.style.width = (scale * 40) + 'px';
+        score.style.height = (scale * 40) + 'px';
+        score.style.lineHeight = (scale * 40) + 'px';
 
-      score.style.backgroundColor = 'hsl(42, ' + saturation + '%, 50%)';
-      title.style.opacity = opacity;
+        // Now figure out how wide it is and use that to saturate it.
+        var saturation = (100 * (((scale * 40) - 38) / 2));
+
+        score.style.backgroundColor = 'hsl(42, ' + saturation + '%, 50%)';
+        title.style.opacity = opacity;
+      }
     }
   }
 
