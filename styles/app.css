@@ -145,8 +145,6 @@ main.loading {
 
 .story {
   padding: 16px 16px 16px 72px;
-  background: #FFF;
-  background: linear-gradient(to bottom, #FFF 0%,#F4F4F4 100%);
   position: relative;
   min-height: 90px;
   cursor: pointer;
@@ -174,6 +172,11 @@ main.loading {
   margin: 0;
   padding: 0;
   line-height: 32px;
+  position: relative;
+}
+
+.story__by {
+  position: relative;
 }
 
 .story__by,
@@ -188,7 +191,6 @@ main.loading {
   position: absolute;
   width: 40px;
   height: 40px;
-  background: #FFB300;
   border-radius: 50%;
   color: rgba(255,255,255,0.87);
   font-weight: 500;

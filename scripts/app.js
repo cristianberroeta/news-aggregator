@@ -62,6 +62,8 @@ APP.Main = (function() {
    * probably in a requestAnimationFrame callback.
    */
   var elementsToEdit;
+  var canvasDataURL;
+  var isFirstElement = true;
   function onStoryData (key, details) {
 
     var story = document.querySelector('#s-' + key);
@@ -70,11 +72,46 @@ APP.Main = (function() {
       details.time *= 1000;
       var html = storyTemplate(details);
       story.innerHTML = html;
+
+      // A canvas element is only created for the first story to arrive. This
+      // element will then be copied to data url, and pasted to itself and
+      // every story as they arrive.
+      // I did it like this because creating one canvas for each story
+      // generated one (or maybe more?) additional layer, so the performance was
+      // low (many "Update Layer Tree" and "Composite Layers"). Maybe there's
+      // some way to avoid that layer creation (and that way the code would be
+      // cleaner)
+      if (isFirstElement) {
+        var canvasHTML = "<canvas id='canvas" + key + "' width=" +
+          story.offsetWidth + " height=" + story.offsetHeight +
+          " style='position: absolute; top: 0; left: 0;'></canvas>";
+          story.innerHTML = canvasHTML + story.innerHTML;
+      } else {
+        story.style.background='url('+canvasDataURL+')';
+      }
       story.addEventListener('click', onStoryClick.bind(this, details));
       story.classList.add('clickable');
 
       // Tick down. When zero we can batch in the next load.
       storyLoadCount--;
+
+      if (isFirstElement) {
+        isFirstElement = false;
+        var canvas = document.getElementById("canvas" + key);
+        var ctx = canvas.getContext("2d");
+        var gradient = ctx.createLinearGradient(0,0,0,canvas.height);
+        gradient.addColorStop(0,"#FFF");
+        gradient.addColorStop(1,"#F4F4F4");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.beginPath();
+        ctx.arc(36, 36, 20, 0, 2 * Math.PI);
+        ctx.clip();
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        canvasDataURL = canvas.toDataURL();
+        canvas.parentNode.removeChild(canvas);
+        story.style.background='url('+canvasDataURL+')';
+      }
     }
 
     // Colorize on complete.
@@ -86,9 +123,34 @@ APP.Main = (function() {
     }
 
     if ((count - storyLoadCount - 1 < elementsToEdit)) {
-      colorizeAndScaleStories();
+      //colorizeAndScaleStories();
     }
   }
+
+  function addMainBackground() {
+    mainBackgroundHTML = "<canvas id='mainBackgroundCanvas' width=" +
+      main.offsetWidth + " height=" + main.offsetHeight +
+      " style='position: absolute; top: 0; left: 0;'></canvas>";
+    main.innerHTML = mainBackgroundHTML + main.innerHTML;
+
+    var canvas = document.getElementById("mainBackgroundCanvas");
+    var ctx = canvas.getContext("2d");
+    var gradient = ctx.createLinearGradient(0,170,0,canvas.height);
+    var gradientFactor = 0.85;
+    var saturation1 = 1;
+    var opacity1 = 1;
+    saturation2 = saturation1 - 1 * gradientFactor;
+    opacity2 = opacity1 - 0.5 * gradientFactor;
+    // The opacity in fact was fixed to 0.87, despite the function
+    // colorizeAndScaleStories that seemed like it wanted to change it.
+    gradient.addColorStop(0,"hsla(42, " + saturation1 * 100 + "% , 50%, " + 0.87 + ")");
+    gradient.addColorStop(1,"hsla(42," + saturation2 * 100 + "% , 50%," + 0.87 + ")");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+
+  }
+  addMainBackground();
 
   function onStoryClick(details) {
 
@@ -252,6 +314,15 @@ APP.Main = (function() {
   /**
    * Apparently this function has a bug. When scrolling about 100 elements down,
    * the colors become all orange, without gradient
+
+   * This function isn't used anymore. I used a background image generated from
+   * a "prototype" canvas, with a circle hole for the
+   * score, and a fixed background with color gradient. Unfortunately, I didn't
+   * resize those holes based on the Y position of the story. But that was a
+   * subtle feature.
+   * Another option would be to create a pool of some canvases, and recycle
+   * them. That way, it would be easy to resize the score, keeping a good
+   * performance.
    */
   function colorizeAndScaleStories() {
 
@@ -316,7 +387,7 @@ APP.Main = (function() {
     var loadThreshold = (main.scrollHeight - main.offsetHeight -
         LAZY_LOAD_THRESHOLD);
 
-    colorizeAndScaleStories();
+    //colorizeAndScaleStories();
 
     header.style.height = (156 - scrollTopCapped) + 'px';
     headerTitles.style.webkitTransform = scaleString;
