@@ -92,9 +92,9 @@ a {
   opacity: 0.54;
 }
 
-body.details-active .story__title,
-body.details-active .story__by,
-body.details-active .story__score {
+.header
+main
+footer {
   transition: opacity 0.5s ease-out;
   opacity: 0 !important;
 }
@@ -243,7 +243,8 @@ main.loading {
   transition: opacity 0.3s ease-out;
 }
 
-.story-details * {
+.story-details__content
+.story-details__header {
   will-change: transform;
   transform: translateZ(0);
 }
