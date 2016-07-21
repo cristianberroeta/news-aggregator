@@ -145,8 +145,10 @@ main.loading {
 
 .story {
   padding: 16px 16px 16px 72px;
+  background: #FFF;
+  background: linear-gradient(to bottom, #FFF 0%,#F4F4F4 100%);
   position: relative;
-  min-height: 90px;
+  /*min-height: 90px;*/
   cursor: pointer;
   transition: all 0.4s ease-out;
 }
@@ -191,6 +193,7 @@ main.loading {
   position: absolute;
   width: 40px;
   height: 40px;
+  background: #FFB300;
   border-radius: 50%;
   color: rgba(255,255,255,0.87);
   font-weight: 500;
@@ -243,10 +246,26 @@ main.loading {
   transition: opacity 0.3s ease-out;
 }
 
-.story-details__content
-.story-details__header {
+/*.story-details*/
+/*.story-details__content,
+.story-details__header,
+.header,
+main,
+footer*/
+.make-layer {
   will-change: transform;
   transform: translateZ(0);
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  top: 0;
+}
+
+footer {
+  z-index: 0;
 }
 
 .story-details__content {
