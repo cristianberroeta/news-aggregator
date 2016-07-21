@@ -180,15 +180,6 @@ APP.Main = (function() {
 
     var storyDetails = $('#sd');
 
-    // As the "main" section seems faster when "story-details" is not a separate
-    // layer, but the "show and hide" seems faster when it is, I'm toggling this
-    // CSS property, to make "story-details" a separate layer when
-    // onStoryClick(), until hideStory().
-    // "make-layer" could also be applied to "main", but only when it's
-    // scrolling, as this seems to worsen the performance when loading the page
-    // and when "showing and hiding" stories
-    storyDetails.classList.add('make-layer');
-
     if (details.url)
       details.urlobj = new URL(details.url);
 
@@ -210,9 +201,9 @@ APP.Main = (function() {
     storyContent = storyDetails.querySelector('.js-content');
 
     var closeButton = storyDetails.querySelector('.js-close');
-    closeButton.addEventListener('click', hideStory.bind(this));
-
     var headerHeight = storyHeader.getBoundingClientRect().height;
+
+    closeButton.addEventListener('click', hideStory.bind(this));
     storyContent.style.paddingTop = headerHeight + 'px';
 
     if (typeof kids === 'undefined')
@@ -255,33 +246,18 @@ APP.Main = (function() {
     if (!storyDetails)
       return;
 
+    // As the "main" section seems faster when "story-details" is not a separate
+    // layer, but the "show and hide" seems faster when it is, I'm toggling this
+    // CSS property, to make "story-details" a separate layer when
+    // onStoryClick(), until hideStory().
+    // "make-layer" could also be applied to "main", but only when it's
+    // scrolling, as this seems to worsen the performance when loading the page
+    // and when "showing and hiding" stories
+    storyDetails.classList.add('make-layer');
+
     document.body.classList.add('details-active');
     storyDetails.style.opacity = 1;
-
-    function animate () {
-
-      // Find out where it currently is.
-      var storyDetailsPosition = storyDetails.getBoundingClientRect();
-
-      // Set the left value if we don't have one already.
-      if (left === null)
-        left = storyDetailsPosition.left;
-
-      // Now figure out where it needs to go.
-      left += (0 - storyDetailsPosition.left) * 0.1;
-
-      // Set up the next bit of the animation if there is more to do.
-      if (Math.abs(left) > 0.5)
-        requestAnimationFrame(animate);
-      else
-        left = 0;
-
-      // And update the styles. Wait, is this a read-write cycle?
-      // I hope I don't trigger a forced synchronous layout!
-      storyDetails.style.left = left + 'px';
-    }
-
-    requestAnimationFrame(animate);
+    storyDetails.style.transform = "translateX(-100vw)";
   }
 
   function hideStory() {
@@ -294,36 +270,9 @@ APP.Main = (function() {
 
     document.body.classList.remove('details-active');
     storyDetails.style.opacity = 0;
-
-    function animate () {
-
-      // Find out where it currently is.
-      var mainPosition = main.getBoundingClientRect();
-      var storyDetailsPosition = storyDetails.getBoundingClientRect();
-      var target = mainPosition.width + 100;
-
-      // Now figure out where it needs to go.
-      left += (target - storyDetailsPosition.left) * 0.1;
-
-      // Set up the next bit of the animation if there is more to do.
-      if (Math.abs(left - target) > 0.5) {
-        requestAnimationFrame(animate);
-      } else {
-        left = target;
-        inDetails = false;
-      }
-
-      // And update the styles. Wait, is this a read-write cycle?
-      // I hope I don't trigger a forced synchronous layout!
-      storyDetails.style.left = left + 'px';
-      storyDetails.classList.remove('make-layer');
-    }
-
-    // We want slick, right, so let's do a setTimeout
-    // every few milliseconds. That's going to keep
-    // it all tight. Or maybe we're doing visual changes
-    // and they should be in a requestAnimationFrame
-    requestAnimationFrame(animate);
+    storyDetails.style.transform = "translateX(0)";
+    storyDetails.classList.remove('make-layer');
+    inDetails = false;
   }
 
   // In this function I first calculate all the properties that generate
