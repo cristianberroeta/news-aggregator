@@ -387,16 +387,6 @@ APP.Main = (function() {
     title.style.opacity = opacity;
   }
 
-  main.addEventListener('touchstart', function(evt) {
-
-    // I just wanted to test what happens if touchstart
-    // gets canceled. Hope it doesn't block scrolling on mobiles...
-    if (Math.random() > 0.97) {
-      evt.preventDefault();
-    }
-
-  });
-
   // TODO: Could transform translate be used in animateHeader(), as in:
   // https://dl.dropboxusercontent.com/u/2272348/codez/parallax/demo-promo/index.html
   // to avoid paints ???
